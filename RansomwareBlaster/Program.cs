@@ -1,15 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using RansomwareBlaster.App;
 
 namespace RansomwareBlaster
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static readonly ManualResetEvent QuitEvent = new ManualResetEvent(false);
+
+        private static void Main()
         {
+            Console.CancelKeyPress += (sender, eArgs) => {
+                QuitEvent.Set();
+                eArgs.Cancel = true;
+            };
+
+            var trapsWatcher = new TrapsWatcher();
+            trapsWatcher.Start();
+
+            QuitEvent.WaitOne();
         }
     }
 }
