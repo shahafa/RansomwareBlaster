@@ -29,6 +29,13 @@ namespace RansomwareBlaster.DAL
 
         public static void Create(string directory)
         {
+            // TODO: According to traps algorithm decided if we need to create new trap or not
+            //       a. Create trap according to dictionary before and after every new file
+            //       b. Create 2 trap files according to dictionary first and last
+            //       c. Create few traps only in specific places
+
+            if (DirectoryContainsTrap(directory)) return;
+
             using (var db = new RansomwareBlasterDbContext())
             {
                 System.IO.File.WriteAllText($@"{directory}\$$.txt", "This is a trap file!!!");

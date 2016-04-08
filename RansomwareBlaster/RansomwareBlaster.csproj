@@ -50,6 +50,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App\TrapsInitializer.cs" />
     <Compile Include="App\TrapsWatcher.cs" />
     <Compile Include="DAL\Traps.cs" />
     <Compile Include="DAL\RansomwareBlasterDbContext.cs" />

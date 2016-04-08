@@ -1,5 +1,6 @@
 ﻿using System;
-using System.IO;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using RansomwareBlaster.App;
 
@@ -9,11 +10,22 @@ namespace RansomwareBlaster
     {
         private static readonly ManualResetEvent QuitEvent = new ManualResetEvent(false);
 
-        private static void Main()
+        private static void Main(string[] args)
         {
-            InitializeDbDirectory();
+            if (args.Any(arg => arg.Equals("init")))
+            {
+                TrapsInitializer.InitTraps();
+            }
+            else
+            {
+                Run();
+            }
+        }
 
-            Console.CancelKeyPress += (sender, eArgs) => {
+        private static void Run()
+        {
+            Console.CancelKeyPress += (sender, eArgs) =>
+            {
                 QuitEvent.Set();
                 eArgs.Cancel = true;
             };
@@ -22,17 +34,6 @@ namespace RansomwareBlaster
             trapsWatcher.Start();
 
             QuitEvent.WaitOne();
-        }
-
-        private static void InitializeDbDirectory()
-        {
-            var dbPath =
-                $@"{Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)}\RansomwareBlaster\";
-
-            if (!Directory.Exists(dbPath))
-                Directory.CreateDirectory(dbPath);
-
-            AppDomain.CurrentDomain.SetData("DataDirectory", dbPath);
         }
     }
 }
