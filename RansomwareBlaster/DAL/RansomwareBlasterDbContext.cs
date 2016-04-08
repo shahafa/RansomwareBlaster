@@ -9,7 +9,7 @@ namespace RansomwareBlaster.DAL
         public RansomwareBlasterDbContext() : base("name=RansomwareBlasterDbContext")
         {
             //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<RansomwareBlasterDbContext>());
-            //Database.SetInitializer<RansomwareBlasterDbContext>(new DropCreateDatabaseAlways<RansomwareBlasterDbContext>());
+            Database.SetInitializer(new DropCreateDatabaseAlways<RansomwareBlasterDbContext>());
         }
 
         public virtual DbSet<Trap> Traps { get; set; }
