@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading;
+using DokanNet;
 using RansomwareBlaster.App;
-using RansomwareBlaster.DAL;
+using RansomwareBlaster.Dal;
 
 namespace RansomwareBlaster
 {
@@ -41,6 +42,11 @@ namespace RansomwareBlaster
             else if (args[0].Equals("monitor"))
             {
                 Monitor();
+            }
+            else if (args[0].Equals("mirror"))
+            {
+                var mirrorDrive = new MirrorDrive("C:");
+                mirrorDrive.Mount("n:\\");
             }
         }
 

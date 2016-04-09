@@ -1,0 +1,14 @@
+﻿[ ] Command line args improve
+[ ] Mirror mode
+	[ ] Unmount
+	[ ] Change drive name
+
+[ ] Find process owner
+[ ] Improve traps creation algorithms
+[ ] Improve MalwareDetected()
+[ ] Add prints
+
+[ ] Agentless / Service / windows protected process
+
+[ ] Notifications
+[ ] add readme.md

@@ -2,7 +2,7 @@
 using System.Linq;
 using RansomwareBlaster.Models;
 
-namespace RansomwareBlaster.DAL
+namespace RansomwareBlaster.Dal
 {
     public class Traps
     {

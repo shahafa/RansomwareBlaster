@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using RansomwareBlaster.DAL;
+using RansomwareBlaster.Dal;
 
 namespace RansomwareBlaster.App
 {
