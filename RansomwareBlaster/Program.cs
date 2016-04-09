@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using RansomwareBlaster.App;
+using RansomwareBlaster.DAL;
 
 namespace RansomwareBlaster
 {
@@ -12,17 +11,40 @@ namespace RansomwareBlaster
 
         private static void Main(string[] args)
         {
-            if (args.Any(arg => arg.Equals("init")))
+            RansomwareBlasterDbContext.InitializeDb();
+
+            if (args.Length == 0)
             {
-                TrapsInitializer.InitTraps();
+                Console.WriteLine(@"Usage: blaster [OPTIONS] COMMAND [args...]");
+                Console.WriteLine(@"");
+                Console.WriteLine(@"Options:");
+                Console.WriteLine(@"  -s                Silent mode");
+                Console.WriteLine(@"  -v, --version     Print version information and quit");
+                Console.WriteLine(@"");
+                Console.WriteLine(@"Commmands:");
+                Console.WriteLine(@"  init              Init trap files");
+                Console.WriteLine(@"  monitor           Monitor trap files");
+                Console.WriteLine(@"");
+                Console.WriteLine(@"Run 'blaster COMMAND --help' for more information on a command");
             }
-            else
+            else if (args[0].Equals("init"))
             {
-                Run();
+                if (args.Length == 1)
+                {
+                    TrapsInitializer.InitTraps();
+                }
+                else
+                {
+                    TrapsInitializer.InitTraps(args[1]);
+                }
+            }
+            else if (args[0].Equals("monitor"))
+            {
+                Monitor();
             }
         }
 
-        private static void Run()
+        private static void Monitor()
         {
             Console.CancelKeyPress += (sender, eArgs) =>
             {

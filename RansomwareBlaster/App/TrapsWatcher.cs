@@ -8,16 +8,13 @@ namespace RansomwareBlaster.App
     internal class TrapsWatcher
     {
         private readonly FileSystemWatcher _fileWatcher;
-        private readonly string[] _extensions = { "txt", "doc", "docx", "xls", "xlsx", "pdf", "png", "jpg" };
         private readonly string _dbFile;
-        private DateTime _fileChangedLastReadTime = DateTime.MinValue;
-        private DateTime _fileCreatedLastReadTime = DateTime.MinValue;
-        private DateTime _fileRenamedLastReadTime = DateTime.MinValue;
-        private const string SystemVolumeInformationDirectory = @"C:\System Volume Information\";
-
+        private DateTime _fileLastReadTime;
+        
         public TrapsWatcher()
         {
             _dbFile = $"{AppDomain.CurrentDomain.GetData("DataDirectory")}db.sdf";
+            _fileLastReadTime = DateTime.MinValue;
 
             _fileWatcher = new FileSystemWatcher
             {
@@ -44,17 +41,34 @@ namespace RansomwareBlaster.App
             _fileWatcher.EnableRaisingEvents = false;
         }
 
+        private bool MonitoredFile(string fileFullPath)
+        {
+            // To prevent multiple event calls we compare last write time with last read time
+            var lastWriteTime = File.GetLastWriteTime(fileFullPath);
+            if (lastWriteTime == _fileLastReadTime) return false;
+            _fileLastReadTime = lastWriteTime;
+
+            // Ignore changes in db file to improve performance and system volume information dir
+            if (fileFullPath.Equals(_dbFile))
+                return false;
+
+            // if file extension is not in ExtensionsList we don't need to monitor it
+            var fileExtension = Path.GetExtension(fileFullPath).ToLower().Trim('.');
+            if (!Properties.Settings.Default.ExtensionsList.Contains(fileExtension))
+                return false;
+
+            // If directory is in IgnoreDirectory list ignore the change
+            var createdFileDirectory = fileFullPath.Substring(0, fileFullPath.LastIndexOf(@"\", StringComparison.Ordinal) + 1);
+            if (Properties.Settings.Default.IgnoreDirectory.Cast<string>().Any(ignoreDirectory => createdFileDirectory.StartsWith(ignoreDirectory)))
+                return false;
+
+            return true;
+        }
+
 
         private void FileCreated(object sender, FileSystemEventArgs fileSystemEventArgs)
         {
-            // To prevent multiple event calls we compare last write time with last read time
-            var lastWriteTime = File.GetLastWriteTime(fileSystemEventArgs.FullPath);
-            if (lastWriteTime == _fileCreatedLastReadTime) return;
-            _fileCreatedLastReadTime = lastWriteTime;
-
-            // if file extension is not in _extensions list we don't need to monitor it
-            var createdFileExtension = (Path.GetExtension(fileSystemEventArgs.FullPath) ?? string.Empty).ToLower().Trim('.');
-            if (!_extensions.Any(createdFileExtension.Equals)) return;
+            if (!MonitoredFile(fileSystemEventArgs.FullPath)) return;
 
             // create new trap
             var createdFileDirectory = fileSystemEventArgs.FullPath.Substring(0, fileSystemEventArgs.FullPath.LastIndexOf(@"\", StringComparison.Ordinal) + 1);
@@ -64,16 +78,9 @@ namespace RansomwareBlaster.App
 
         private void FileRenamed(object sender, RenamedEventArgs fileSystemEventArgs)
         {
-            // To prevent multiple event calls we compare last write time with last read time
-            var lastWriteTime = File.GetLastWriteTime(fileSystemEventArgs.FullPath);
-            if (lastWriteTime == _fileRenamedLastReadTime) return;
-            _fileRenamedLastReadTime = lastWriteTime;
+            if (!MonitoredFile(fileSystemEventArgs.OldFullPath)) return;
 
-            // if file extension is not in _extensions list we don't need to monitor it
-            var renamedFileExtension = (Path.GetExtension(fileSystemEventArgs.OldFullPath) ?? string.Empty).ToLower().Trim('.');
-            if (!_extensions.Any(renamedFileExtension.Equals)) return;
-
-            // If renamed file is trap than malware detected
+            // If trap file renamed than malware detected
             if (Traps.IsTrap(fileSystemEventArgs.OldFullPath))
             {
                 MalwareDetected();
@@ -83,21 +90,9 @@ namespace RansomwareBlaster.App
 
         private void FileChanged(object sender, FileSystemEventArgs fileSystemEventArgs)
         {
-            // Ignore changes in db file to improve performance and system volume information dir
-            if (fileSystemEventArgs.FullPath.Equals(_dbFile) ||
-                fileSystemEventArgs.FullPath.StartsWith(SystemVolumeInformationDirectory))
-                return;
+            if (!MonitoredFile(fileSystemEventArgs.FullPath)) return;
 
-            // To prevent multiple event calls we compare last write time with last read time
-            var lastWriteTime = File.GetLastWriteTime(fileSystemEventArgs.FullPath);
-            if (lastWriteTime == _fileChangedLastReadTime) return;
-            _fileChangedLastReadTime = lastWriteTime;
-
-            // if file extension is not in _extensions list we don't need to monitor it
-            var changedFileExtension = Path.GetExtension(fileSystemEventArgs.FullPath).ToLower().Trim('.');
-            if (!_extensions.Any(changedFileExtension.Equals)) return;
-
-            // if trap changed than malware detected
+            // if trap file changed than malware detected
             if (Traps.IsTrap(fileSystemEventArgs.FullPath))
             {
                 MalwareDetected();

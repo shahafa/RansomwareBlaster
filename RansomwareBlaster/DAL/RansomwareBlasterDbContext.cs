@@ -10,15 +10,18 @@ namespace RansomwareBlaster.DAL
     {
         public RansomwareBlasterDbContext() : base("name=RansomwareBlasterDbContext")
         {
+            //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<RansomwareBlasterDbContext>());
+            //Database.SetInitializer(new DropCreateDatabaseAlways<RansomwareBlasterDbContext>());
+        }
+
+        public static void InitializeDb()
+        {
             var dbPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)}\RansomwareBlaster\";
 
             if (!Directory.Exists(dbPath))
                 Directory.CreateDirectory(dbPath);
 
             AppDomain.CurrentDomain.SetData("DataDirectory", dbPath);
-
-            //Database.SetInitializer(new DropCreateDatabaseIfModelChanges<RansomwareBlasterDbContext>());
-            //Database.SetInitializer(new DropCreateDatabaseAlways<RansomwareBlasterDbContext>());
         }
 
         public virtual DbSet<Trap> Traps { get; set; }

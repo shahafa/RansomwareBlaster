@@ -1,28 +1,43 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using RansomwareBlaster.DAL;
 
 namespace RansomwareBlaster.App
 {
     internal class TrapsInitializer
     {
-        private const string RootDirectory = @"C:\RansomwarePlayground\";
-        private static readonly string[] Extensions = { "txt", "doc", "docx", "xls", "xlsx", "pdf", "png", "jpg" };
-        private static readonly string[] IgnoreDirectory = { @"C:\Program Files", @"C:\Program Files (x86)", @"C:\Windows", @"C:\$Recycle.Bin" };
-
-        public static void InitTraps()
+        public static void InitTraps(string directory = null)
         {
+            // Clean DB
             using (var db = new RansomwareBlasterDbContext())
             {
                 foreach (var trap in db.Traps)
                     db.Traps.Remove(trap);
+
                 db.SaveChanges();
             }
 
-            // Todo: Change to run on each drive of the system
-            SetTraps(RootDirectory);
+            if (string.IsNullOrEmpty(directory))
+            {
+                foreach (var drive in Directory.GetLogicalDrives())
+                {
+                    try
+                    {
+                        SetTraps(drive);
+                    }
+                    catch (Exception)
+                    {
+                        // Todo: print log that adding trap to drive failed
+                        // ignored
+                    }
+                }                
+            }
+            else
+            {
+                SetTraps(directory);
+            }
         }
+
 
         private static void SetTraps(string directory)
         {
@@ -30,8 +45,9 @@ namespace RansomwareBlaster.App
 
             foreach (var file in files)
             {
+                // if file extension is not in ExtensionList we don't need to set trap for it
                 var fileExtension = file.Substring(file.LastIndexOf(".", StringComparison.Ordinal) + 1);
-                if (!Extensions.Any(fileExtension.Equals)) continue;
+                if (!Properties.Settings.Default.ExtensionsList.Contains(fileExtension)) continue;
 
                 Traps.Create(directory);
             }
@@ -39,8 +55,8 @@ namespace RansomwareBlaster.App
             var subDirectories = Directory.GetDirectories(directory);
             foreach (var subDirectory in subDirectories)
             {
-                if (IgnoreDirectory.Any(subDirectory.Equals))
-                    continue;
+                // if the directory is in the list of directories to ignore continue to the next directory
+                if (Properties.Settings.Default.IgnoreDirectory.Contains(subDirectory)) continue;
 
                 SetTraps(subDirectory);
             }
